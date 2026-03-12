@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Simulador Árvore Binária</title>
+
+<style>
+
+body{
+font-family:Arial;
+text-align:center;
+background:#f4f6f8;
+}
+
+h1{
+margin-top:20px;
+}
+
+.controls{
+margin:20px;
+}
+
+input{
+padding:10px;
+width:150px;
+font-size:16px;
+margin:3px;
+}
+
+button{
+padding:10px 15px;
+margin:5px;
+font-size:14px;
+cursor:pointer;
+border:none;
+background:#3498db;
+color:white;
+border-radius:5px;
+box-shadow: 5px 5px 10px black;
+}
+
+button:hover{
+background:#2980b9;
+}
+
+canvas{
+background:white;
+border:1px solid #ccc;
+margin-top:20px;
+box-shadow: 5px 5px 10px black;
+}
+
+#resultado{
+margin-top:20px;
+font-size:18px;
+font-weight:bold;
+box-shadow: 5px 5px 10px black;
+}
+.box{
+	width: 90%;
+	height: 40px;
+	background: skyblue;
+	padding: 10px;
+	box-shadow: 10px 10px 10px black;
+	margin: 15px;
+
+}
+p{
+	margin:0px;
+}
+</style>
+</head>
+
+<body>
+	<div class="box">
+		<p>UFRA - Sistema de Informação - Porto de Moz</p>
+		<p>Equipe: Abel, Clebison, Elinaldo, Francisca e Jucélia</p>
+	</div>
+
+<h1>Simulador Árvore Binária</h1>
+
+
+<div class="controls">
+
+<input type="number" id="numero" placeholder="Número">
+<input type="text" id="nome" placeholder="Nome">
+
+<br>
+
+<button onclick="inserir()">Inserir</button>
+<button onclick="buscar()">Buscar</button>
+<button onclick="remover()">Excluir</button>
+
+<br><br>
+
+ <button onclick="preOrdem()">Pré-ordem</button>
+<button onclick="emOrdem()">Em-ordem</button>
+<button onclick="posOrdem()">Pós-ordem</button>
+
+</div>
+
+<canvas id="canvas" width="1000" height="550"></canvas>
+
+<div id="resultado"></div>
+
+<script>
+
+class No{
+
+constructor(numero,nome){
+
+this.numero = numero
+this.nome = nome
+this.esquerda = null
+this.direita = null
+this.x = 0
+this.y = 0
+
+}
+
+}
+
+class Arvore{
+
+constructor(){
+
+this.raiz = null
+
+}
+
+inserir(numero,nome){
+
+let novo = new No(numero,nome)
+
+if(this.raiz == null){
+this.raiz = novo
+return
+}
+
+let atual = this.raiz
+
+while(true){
+
+if(numero < atual.numero){
+
+if(atual.esquerda == null){
+atual.esquerda = novo
+return
+}
+
+atual = atual.esquerda
+
+}else{
+
+if(atual.direita == null){
+atual.direita = novo
+return
+}
+
+atual = atual.direita
+
+}
+
+}
+
+}
+
+buscar(numero){
+
+let atual = this.raiz
+let caminho = []
+
+while(atual != null){
+
+caminho.push(atual)
+
+if(numero == atual.numero){
+return {no:atual,caminho:caminho}
+}
+
+if(numero < atual.numero){
+atual = atual.esquerda
+}else{
+atual = atual.direita
+}
+
+}
+
+return {no:null,caminho:caminho}
+
+}
+
+remover(numero){
+
+this.raiz = this.removerNo(this.raiz,numero)
+
+}
+
+removerNo(no,numero){
+
+if(no == null) return null
+
+if(numero < no.numero){
+no.esquerda = this.removerNo(no.esquerda,numero)
+return no
+}
+
+if(numero > no.numero){
+no.direita = this.removerNo(no.direita,numero)
+return no
+}
+
+if(no.esquerda == null && no.direita == null){
+return null
+}
+
+if(no.esquerda == null){
+return no.direita
+}
+
+if(no.direita == null){
+return no.esquerda
+}
+
+let sucessor = this.minimo(no.direita)
+
+no.numero = sucessor.numero
+no.nome = sucessor.nome
+
+no.direita = this.removerNo(no.direita,sucessor.numero)
+
+return no
+
+}
+
+minimo(no){
+
+while(no.esquerda != null){
+no = no.esquerda
+}
+
+return no
+
+}
+
+preOrdem(no,res=[]){
+
+if(no){
+
+res.push(no.numero+"-"+no.nome)
+
+this.preOrdem(no.esquerda,res)
+this.preOrdem(no.direita,res)
+
+}
+
+return res
+
+}
+
+emOrdem(no,res=[]){
+
+if(no){
+
+this.emOrdem(no.esquerda,res)
+
+res.push(no.numero+"-"+no.nome)
+
+this.emOrdem(no.direita,res)
+
+}
+
+return res
+
+}
+
+posOrdem(no,res=[]){
+
+if(no){
+
+this.posOrdem(no.esquerda,res)
+this.posOrdem(no.direita,res)
+
+res.push(no.numero+"-"+no.nome)
+
+}
+
+return res
+
+}
+
+}
+
+let arvore = new Arvore()
+
+let canvas = document.getElementById("canvas")
+let ctx = canvas.getContext("2d")
+
+function inserir(){
+
+let numero = parseInt(document.getElementById("numero").value)
+let nome = document.getElementById("nome").value
+
+if(isNaN(numero) || nome=="") return
+
+arvore.inserir(numero,nome)
+
+desenhar()
+
+}
+
+function buscar(){
+
+let numero = parseInt(document.getElementById("numero").value)
+
+let r = arvore.buscar(numero)
+
+desenhar(r.caminho)
+
+if(r.no){
+document.getElementById("resultado").innerText="Encontrado: "+r.no.nome
+}else{
+document.getElementById("resultado").innerText="Valor não encontrado"
+}
+
+}
+
+function remover(){
+
+let numero = parseInt(document.getElementById("numero").value)
+
+arvore.remover(numero)
+
+desenhar()
+
+}
+
+function desenhar(caminho=[]){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+posicionar(arvore.raiz,500,40,250)
+
+desenharLigacoes(arvore.raiz)
+
+desenharNos(arvore.raiz,caminho)
+
+}
+
+function posicionar(no,x,y,espaco){
+
+if(no == null) return
+
+no.x = x
+no.y = y
+
+posicionar(no.esquerda,x-espaco,y+90,espaco/2)
+posicionar(no.direita,x+espaco,y+90,espaco/2)
+
+}
+
+function desenharLigacoes(no){
+
+if(no == null) return
+
+if(no.esquerda){
+linha(no,no.esquerda)
+desenharLigacoes(no.esquerda)
+}
+
+if(no.direita){
+linha(no,no.direita)
+desenharLigacoes(no.direita)
+}
+
+}
+
+function linha(a,b){
+
+ctx.beginPath()
+ctx.moveTo(a.x,a.y)
+ctx.lineTo(b.x,b.y)
+ctx.stroke()
+
+}
+
+function desenharNos(no,caminho){
+
+if(no == null) return
+
+ctx.beginPath()
+
+if(caminho.includes(no)){
+ctx.fillStyle="orange"
+}else{
+ctx.fillStyle="#2ecc71"
+}
+
+ctx.arc(no.x,no.y,30,0,Math.PI*2)
+ctx.fill()
+
+ctx.fillStyle="black"
+ctx.font="12px Arial"
+ctx.textAlign="center"
+
+ctx.fillText(no.numero,no.x,no.y-5)
+ctx.fillText(no.nome,no.x,no.y+12)
+
+desenharNos(no.esquerda,caminho)
+desenharNos(no.direita,caminho)
+
+}
+
+function preOrdem(){
+
+let r = arvore.preOrdem(arvore.raiz)
+
+document.getElementById("resultado").innerText="Pré-ordem: "+r.join(" | ")
+
+}
+
+function emOrdem(){
+
+let r = arvore.emOrdem(arvore.raiz)
+
+document.getElementById("resultado").innerText="Em-ordem: "+r.join(" | ")
+
+}
+
+function posOrdem(){
+
+let r = arvore.posOrdem(arvore.raiz)
+
+document.getElementById("resultado").innerText="Pós-ordem: "+r.join(" | ")
+
+}
+
+</script>
+
+</body>
+</html>
